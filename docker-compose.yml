@@ -1,0 +1,11 @@
+version: '3'
+services:
+  iupDB:
+    image: mysql:5.7
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3357:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: rootPassword
+    volumes:
+      - /var/lib/iupDB-data:/var/lib/mysql
