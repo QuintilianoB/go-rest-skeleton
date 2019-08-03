@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
-	"go-rest-skeleton/models"
+	"iupDB/models"
 	"log"
 	"net/http"
 	"os"
@@ -30,13 +30,11 @@ func LogFatal(err error) {
 func SendError(writer http.ResponseWriter, status int, error error) {
 	writer.WriteHeader(status)
 	writer.Header().Set("Content-type", "application/json")
-	log.Println(error)
 
 	if error == nil {
 		json.NewEncoder(writer)
 	} else {
 		err := json.NewEncoder(writer).Encode(error)
-
 		if err != nil {
 			log.Println(err)
 		}
@@ -86,7 +84,6 @@ func GenerateToken(user models.User) (string, error) {
 	}
 
 	exp := time.Now().Add(time.Duration(ttl) * time.Second)
-	exp.Location()
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user": user.User,
@@ -134,7 +131,8 @@ func TokenVerifyMiddleWare(next http.HandlerFunc) http.HandlerFunc {
 			if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 				exp := fmt.Sprintf("%s", claims["exp"])
 
-				layout := "2006-01-02T15:04:05.000000000+02:00"
+				// Não rela.
+				layout := "2006-01-02T15:04:05.000000000-07:00"
 
 				t, err := time.Parse(layout, exp)
 				if err != nil {
@@ -142,7 +140,7 @@ func TokenVerifyMiddleWare(next http.HandlerFunc) http.HandlerFunc {
 					return
 				}
 
-				if time.Now().Unix() <= t.Unix() {
+				if time.Now().After(t) {
 					SendError(w, http.StatusUnauthorized, models.TokenExpired)
 					return
 				} else {
